@@ -1,0 +1,33 @@
+# arXiv paper downloader dependencies
+arxiv==2.1.0
+requests==2.31.0
+pathlib2==2.3.7
+
+# PDF processing
+PyPDF2==3.0.1
+pdfplumber==0.10.3
+
+# Text processing and embeddings
+transformers==4.36.0
+torch==2.1.0
+sentence-transformers==2.2.2
+
+# OpenSearch client
+opensearch-py==2.4.0
+
+# FastMCP and MCP tools
+fastmcp==0.1.0
+mcp==1.0.0
+
+# Jupyter notebook
+jupyter==1.0.0
+ipykernel==6.26.0
+
+# Docker and containerization
+docker==6.1.0
+
+# LiteLLM
+litellm==1.17.0
+
+# Agno framework
+agno==0.1.0

@@ -1,0 +1,17 @@
+{
+  "total_papers": 2,
+  "total_words": 5351,
+  "total_chunks": 7,
+  "papers": [
+    {
+      "paper_id": "Who Touched My Browser Fingerprint_",
+      "word_count": 3057,
+      "chunk_count": 4
+    },
+    {
+      "paper_id": "Web Audio Fingerprints",
+      "word_count": 2294,
+      "chunk_count": 3
+    }
+  ]
+}
