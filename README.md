@@ -34,13 +34,29 @@ git clone <your-repository-url>
 cd mcp-demo
 ```
 
-### 2. Install Python Dependencies
+### 2. Set Up Environment Variables
+
+Create a `.env` file with your OpenAI API key:
+
+```bash
+cp env.example .env
+```
+
+Edit `.env` and add your OpenAI API key:
+
+```bash
+# Get your API key from: https://platform.openai.com/api-keys
+OPENAI_API_KEY=your_actual_api_key_here
+LITELLM_MASTER_KEY=demo-key-123
+```
+
+### 3. Install Python Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Start Docker Services
+### 4. Start Docker Services
 
 ```bash
 docker-compose up -d
