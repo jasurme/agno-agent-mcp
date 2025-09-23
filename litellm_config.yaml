@@ -1,0 +1,20 @@
+model_list:
+  - model_name: local-llama
+    litellm_params:
+      model: gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+general_settings:
+  master_key: "demo-key-123"
+  litellm_logging: true
+  success_callback: []
+  failure_callback: []
+
+router_settings:
+  routing_strategy: "simple-shuffle"
+  routing_strategy_args: {}
+  allowed_fails: 0
+  cooldown_time: 0
+  num_retries: 0
+  timeout: 0
+  ttl: 0
