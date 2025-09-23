@@ -1,54 +1,34 @@
-# MCP Demo - OpenSearch with FastMCP and Agno Framework
+# MCP Demo
 
-This project demonstrates a complete MCP (Model Context Protocol) implementation using OpenSearch, FastMCP, and the Agno framework. It includes PDF indexing, multiple search types (BM25, Dense Vector, Hybrid), and LLM integration through LiteLLM proxy.
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
 Before running this project, ensure you have the following installed:
+You are expected to have
+- Docker installed
 
-1. **Docker & Docker Compose**
-   - [Install Docker Desktop](https://www.docker.com/products/docker-desktop/)
-   - [Install Docker Compose](https://docs.docker.com/compose/install/)
+- python 3.11
+and git
 
-2. **Python 3.8+**
-   - [Download Python](https://www.python.org/downloads/)
-   - Verify installation: `python --version`
-
-3. **Git**
-   - [Install Git](https://git-scm.com/downloads)
-
-### System Requirements
-
-- **RAM**: Minimum 8GB (16GB recommended)
-- **Storage**: At least 5GB free space
-- **OS**: macOS, Linux, or Windows with WSL2
-
-## 📋 Installation Steps
-
-### 1. Clone the Repository
-
-```bash
-git clone <your-repository-url>
-cd mcp-demo
-```
 
 ### 2. Set Up Environment Variables
+1. create virtual environment to install libraries
 
-Create a `.env` file with your OpenAI API key:
+python3.11 -m venv env11 
+if you are on MacOS: to activate: source env11/bin/activate
+on Windows: env11\Scripts\activate
+
+
+2. Create `.env` . We need OpenAI api key. 
 
 ```bash
-cp env.example .env
-```
 
-Edit `.env` and add your OpenAI API key:
-
-```bash
-# Get your API key from: https://platform.openai.com/api-keys
-OPENAI_API_KEY=your_actual_api_key_here
+OPENAI_API_KEY= actual_api_key
 LITELLM_MASTER_KEY=demo-key-123
 ```
+
 
 ### 3. Install Python Dependencies
 
@@ -135,10 +115,9 @@ OpenSearch is configured with:
 ```
 mcp-demo/
 ├── agno_agent.py              # Main agent script
+├── indexer.py                 # PDF processing and indexing script
 ├── fastmcp_server.py          # FastMCP server
 ├── mcp_opensearch_tool.py     # OpenSearch MCP tool
-├── opensearch_indexer.py      # PDF indexing script
-├── pdf_processor.py           # PDF processing utilities
 ├── docker-compose.yml         # Docker services configuration
 ├── litellm_config.yaml        # LiteLLM proxy configuration
 ├── requirements.txt           # Python dependencies
@@ -239,6 +218,32 @@ LLM Response:
 ----------------------------------------
 The Web Audio API was first introduced in 2011 as part of the W3C specification.
 ```
+
+## 🔄 Adding New PDFs
+
+To add new PDFs to the system:
+
+1. **Place PDFs in the papers directory:**
+   ```bash
+   mkdir -p papers/raw
+   # Copy your PDFs to papers/raw/
+   ```
+
+2. **Run the indexer:**
+   ```bash
+   python3 indexer.py
+   ```
+
+3. **Run the agent:**
+   ```bash
+   python3 agno_agent.py
+   ```
+
+The indexer will automatically:
+- Extract text from PDFs
+- Split into chunks
+- Generate embeddings
+- Index in OpenSearch
 
 ## 🚀 Advanced Usage
 
