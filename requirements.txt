@@ -2,20 +2,10 @@
 fastmcp>=0.1.0
 mcp>=1.0.0
 requests>=2.31.0
-
-# PDF processing
 PyPDF2>=3.0.0
 pdfplumber>=0.9.0
-
-# Text processing and embeddings
 sentence-transformers>=2.2.0
-
-# OpenSearch client
 opensearch-py>=2.0.0
-
-# HTTP requests
 httpx>=0.24.0
-
-# Utilities
 tqdm>=4.65.0
 python-dotenv>=1.0.0

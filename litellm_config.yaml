@@ -1,8 +1,10 @@
 model_list:
-  - model_name: local-llama
+  - model_name: gpt-4o-mini
     litellm_params:
       model: gpt-4o-mini
       api_key: os.environ/OPENAI_API_KEY
+      # model: huggingface/meta-llama/Llama-2-7b-chat-hf
+      # api_key: os.environ/HUGGINGFACE_API_KEY
 
 general_settings:
   master_key: "demo-key-123"

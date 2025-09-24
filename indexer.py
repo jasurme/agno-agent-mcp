@@ -56,14 +56,21 @@ class PDFIndexer:
                         "full_text": {"type": "text", "analyzer": "standard"},
                         "chunk_text": {"type": "text", "analyzer": "standard"},
                         "chunk_embedding": {
-                            "type": "dense_vector",
-                            "dims": 1024,
-                            "index": True,
-                            "similarity": "cosine"
+                            "type": "knn_vector",
+                            "dimension": 1024,
+                            "method": {
+                                "name": "hnsw",
+                                "space_type": "cosinesimil",
+                                "engine": "nmslib",
+                                "parameters": {
+                                    "ef_construction": 128,
+                                    "m": 24
+                                }
+                            }
                         },
                         "chunk_index": {"type": "integer"},
                         "total_chunks": {"type": "integer"},
-                        "publication_date": {"type": "date"},
+                        "publication_date": {"type": "date", "format": "strict_date_optional_time||epoch_millis"},
                         "url": {"type": "keyword"},
                         "file_path": {"type": "keyword"}
                     }
@@ -146,17 +153,31 @@ class PDFIndexer:
         return text.strip()
     
     def split_text_into_chunks(self, text: str, chunk_size: int = 1000, overlap: int = 200) -> List[str]:
-        """Split text into overlapping chunks."""
+        """Split text into overlapping chunks by characters."""
         if not text:
             return []
         
-        words = text.split()
         chunks = []
+        start = 0
         
-        for i in range(0, len(words), chunk_size - overlap):
-            chunk = ' '.join(words[i:i + chunk_size])
+        while start < len(text):
+            end = start + chunk_size
+            chunk = text[start:end]
+            
+            # Try to break at word boundary if possible
+            if end < len(text):
+                # Find the last space within the chunk
+                last_space = chunk.rfind(' ')
+                if last_space > chunk_size * 0.8:  # Only break at word if it's not too far from the end
+                    chunk = chunk[:last_space]
+                    end = start + last_space
+            
             if chunk.strip():
                 chunks.append(chunk.strip())
+            
+            start = end - overlap
+            if start >= len(text):
+                break
         
         return chunks
     
@@ -167,7 +188,7 @@ class PDFIndexer:
             return embedding.tolist()
         except Exception as e:
             print(f"Error generating embedding: {e}")
-            return [0.0] * 1024  # Return zero vector if embedding fails
+            return [0.0] * 1024  
     
     def index_paper(self, paper_data: Dict[str, Any]) -> bool:
         """Index a single paper in OpenSearch."""
@@ -217,49 +238,89 @@ class PDFIndexer:
             print(f"Error indexing paper {paper_id}: {e}")
             return False
     
-    def index_papers_from_directory(self, papers_dir: str = "papers/processed") -> Dict[str, Any]:
-        """Index all processed papers from directory."""
+    def index_papers_from_directory(self, papers_dir: str = "papers/pdfs") -> Dict[str, Any]:
+        """Index all PDF papers from directory."""
         papers_path = Path(papers_dir)
         
         if not papers_path.exists():
             print(f"Papers directory {papers_dir} does not exist")
             return {"success": False, "error": "Directory not found"}
         
-        # Find all JSON files
-        json_files = list(papers_path.glob("*.json"))
+        # Find all PDF files
+        pdf_files = list(papers_path.glob("*.pdf"))
         
-        if not json_files:
-            print(f"No JSON files found in {papers_dir}")
+        if not pdf_files:
+            print(f"No PDF files found in {papers_dir}")
             return {"success": False, "error": "No papers to index"}
         
-        print(f"Found {len(json_files)} papers to index")
+        print(f"Found {len(pdf_files)} PDF papers to index")
         
         indexed_count = 0
         failed_count = 0
         
-        for json_file in json_files:
+        for pdf_file in pdf_files:
             try:
-                with open(json_file, 'r', encoding='utf-8') as f:
-                    paper_data = json.load(f)
+                # Extract paper data from PDF
+                paper_data = self.extract_paper_data_from_pdf(pdf_file)
                 
-                if self.index_paper(paper_data):
+                if paper_data and self.index_paper(paper_data):
                     indexed_count += 1
                 else:
                     failed_count += 1
                     
             except Exception as e:
-                print(f"Error processing {json_file}: {e}")
+                print(f"Error processing {pdf_file}: {e}")
                 failed_count += 1
         
         result = {
             "success": True,
-            "total_papers": len(json_files),
+            "total_papers": len(pdf_files),
             "indexed_papers": indexed_count,
             "failed_papers": failed_count
         }
         
         print(f"Indexing complete: {indexed_count} successful, {failed_count} failed")
         return result
+    
+    def extract_paper_data_from_pdf(self, pdf_path: Path) -> Optional[Dict[str, Any]]:
+        """Extract paper metadata and text from PDF file."""
+        try:
+            # Extract text
+            full_text = self.extract_text_from_pdf(str(pdf_path))
+            
+            if not full_text:
+                print(f"Could not extract text from {pdf_path}")
+                return None
+            
+            # Generate paper ID from filename
+            paper_id = pdf_path.stem.replace(" ", "_").lower()
+            
+            # Try to extract title from first few lines
+            lines = full_text.split('\n')[:10]
+            title = ""
+            for line in lines:
+                line = line.strip()
+                if len(line) > 10 and len(line) < 200:  # Reasonable title length
+                    title = line
+                    break
+            
+            # Create paper data
+            paper_data = {
+                "paper_id": paper_id,
+                "title": title or pdf_path.stem,
+                "authors": "Unknown",  # Could be enhanced to extract from PDF
+                "abstract": "",  # Could be enhanced to extract from PDF
+                "full_text": full_text,
+                "publication_date": None,  # Use None instead of empty string for date field
+                "url": "",
+                "file_path": str(pdf_path)
+            }
+            
+            return paper_data
+            
+        except Exception as e:
+            print(f"Error extracting data from {pdf_path}: {e}")
+            return None
     
     def wait_for_opensearch(self, max_retries: int = 30, delay: int = 2):
         """Wait for OpenSearch to be ready."""

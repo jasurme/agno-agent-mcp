@@ -27,6 +27,7 @@ on Windows: env11\Scripts\activate
 
 OPENAI_API_KEY= actual_api_key
 LITELLM_MASTER_KEY=demo-key-123
+HUGGINGFACE_API_KEY=HF_key
 ```
 
 
@@ -61,11 +62,11 @@ All services should show "Up" status.
 ### 5. Index Sample PDFs
 
 ```bash
-python opensearch_indexer.py
+python indexer.py
 ```
 
 This will:
-- Download sample PDFs from arXiv
+- read files from papers/pdfs
 - Process and chunk the documents
 - Generate embeddings using HuggingFace BGE model
 - Index everything in OpenSearch
@@ -93,7 +94,8 @@ For each search type, it:
 
 ### LLM Configuration
 
-The project uses OpenAI's GPT-4o-mini model through LiteLLM proxy. The API key is configured in `litellm_config.yaml`:
+if you open litellm_config.yaml, HF model is taken in comments. 
+if you want to use HF, just remove comments and make Openai model and api key lines in comments
 
 ```yaml
 model_list:
@@ -103,12 +105,10 @@ model_list:
       api_key: "your-openai-api-key"
 ```
 
-### OpenSearch Configuration
+Advice is to decide one and use it. if you use one and switch to another, after changing litellm_config.yaml, restart litellm (in terminal): 
 
-OpenSearch is configured with:
-- **Index**: `arxiv_papers`
-- **Embedding Model**: HuggingFace BGE (runs locally)
-- **Chunk Size**: 1500 characters with 300 character overlap
+docker-compose restart litellm-proxy
+
 
 ## 📁 Project Structure
 
@@ -183,50 +183,14 @@ curl -X POST http://localhost:4000/chat/completions \
   }'
 ```
 
-### 3. Test the Demo
-```bash
-python agno_agent.py
-```
-
-## 📊 Expected Output
-
-When running the demo, you should see:
-
-```
-Processing query: 'when was web audio api first introduced?'
-============================================================
-
-BM25 Search Results:
-------------------------------
-  1. [0.85] The Web Audio API was first introduced in 2011 as part of the W3C specification...
-  2. [0.82] Browser fingerprinting using Web Audio API has been studied extensively...
-  3. [0.78] The API provides real-time audio processing capabilities...
-
-Dense Vector Search Results:
-------------------------------
-  1. [0.92] Web Audio API implementation details and browser compatibility...
-  2. [0.89] Audio fingerprinting techniques using Web Audio API...
-  3. [0.87] Historical development of Web Audio standards...
-
-Hybrid Search Results:
-------------------------------
-  1. [0.94] The Web Audio API was first introduced in 2011...
-  2. [0.91] Browser implementations and compatibility issues...
-  3. [0.88] Security and privacy considerations...
-
-LLM Response:
-----------------------------------------
-The Web Audio API was first introduced in 2011 as part of the W3C specification.
-```
-
 ## 🔄 Adding New PDFs
 
 To add new PDFs to the system:
 
 1. **Place PDFs in the papers directory:**
    ```bash
-   mkdir -p papers/raw
-   # Copy your PDFs to papers/raw/
+   mkdir -p papers/pdfs
+   # Copy your PDFs to papers/pdfs/
    ```
 
 2. **Run the indexer:**
@@ -240,6 +204,7 @@ To add new PDFs to the system:
    ```
 
 The indexer will automatically:
+- Read PDFs from `papers/pdfs/`
 - Extract text from PDFs
 - Split into chunks
 - Generate embeddings
@@ -247,38 +212,12 @@ The indexer will automatically:
 
 ## 🚀 Advanced Usage
 
-### Custom Queries
-
-You can modify the sample queries in `agno_agent.py`:
-
-```python
-sample_queries = [
-    "your custom query here",
-    "another question about the documents"
-]
-```
 
 ### Adding New PDFs
 
 1. Place PDF files in the `papers/` directory
 2. Run the indexer: `python opensearch_indexer.py`
 3. The new documents will be automatically processed and indexed
-
-### Modifying Search Parameters
-
-Edit the search methods in `agno_agent.py` to adjust:
-- Number of results returned
-- BM25/Vector search weights
-- Chunk size and overlap
-
-## 📞 Support
-
-If you encounter any issues:
-
-1. Check the troubleshooting section above
-2. Verify all prerequisites are installed
-3. Ensure Docker services are running properly
-4. Check the logs for specific error messages
 
 ## 🔄 Stopping the Services
 
@@ -293,7 +232,3 @@ To stop and remove all data:
 ```bash
 docker-compose down -v
 ```
-
-## 📝 License
-
-This project is for demonstration purposes. Please ensure you have appropriate licenses for any commercial use of the included technologies.

@@ -45,10 +45,25 @@ class OpenSearchMCPTool:
                         }
                     },
                     "size": size,
-                    "_source": ["paper_id", "full_text"]
+                    "_source": ["paper_id", "chunks", "full_text"]
                 }
             )
-            return response['hits']['hits']
+            # Extract individual chunks from the results
+            chunk_results = []
+            for hit in response['hits']['hits']:
+                paper_id = hit['_source']['paper_id']
+                for i, chunk in enumerate(hit['_source']['chunks']):
+                    chunk_results.append({
+                        '_index': hit['_index'],
+                        '_id': f"{paper_id}_chunk_{i}",
+                        '_score': hit['_score'],
+                        '_source': {
+                            'paper_id': paper_id,
+                            'chunk_text': chunk['text'],
+                            'full_text': hit['_source']['full_text']
+                        }
+                    })
+            return chunk_results[:size]
         except Exception as e:
             raise Exception(f"BM25 search failed: {str(e)}")
     
@@ -74,10 +89,25 @@ class OpenSearchMCPTool:
                         }
                     },
                     "size": size,
-                    "_source": ["paper_id", "full_text"]
+                    "_source": ["paper_id", "chunks", "full_text"]
                 }
             )
-            return response['hits']['hits']
+            # Extract individual chunks from the results
+            chunk_results = []
+            for hit in response['hits']['hits']:
+                paper_id = hit['_source']['paper_id']
+                for i, chunk in enumerate(hit['_source']['chunks']):
+                    chunk_results.append({
+                        '_index': hit['_index'],
+                        '_id': f"{paper_id}_chunk_{i}",
+                        '_score': hit['_score'],
+                        '_source': {
+                            'paper_id': paper_id,
+                            'chunk_text': chunk['text'],
+                            'full_text': hit['_source']['full_text']
+                        }
+                    })
+            return chunk_results[:size]
         except Exception as e:
             raise Exception(f"Vector search failed: {str(e)}")
     
@@ -119,10 +149,25 @@ class OpenSearchMCPTool:
                         }
                     },
                     "size": size,
-                    "_source": ["paper_id", "full_text"]
+                    "_source": ["paper_id", "chunks", "full_text"]
                 }
             )
-            return response['hits']['hits']
+            # Extract individual chunks from the results
+            chunk_results = []
+            for hit in response['hits']['hits']:
+                paper_id = hit['_source']['paper_id']
+                for i, chunk in enumerate(hit['_source']['chunks']):
+                    chunk_results.append({
+                        '_index': hit['_index'],
+                        '_id': f"{paper_id}_chunk_{i}",
+                        '_score': hit['_score'],
+                        '_source': {
+                            'paper_id': paper_id,
+                            'chunk_text': chunk['text'],
+                            'full_text': hit['_source']['full_text']
+                        }
+                    })
+            return chunk_results[:size]
         except Exception as e:
             raise Exception(f"Hybrid search failed: {str(e)}")
     

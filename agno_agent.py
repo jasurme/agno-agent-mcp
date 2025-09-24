@@ -231,20 +231,20 @@ class AgnoAgent:
         print("=" * 60)
         
         try:
-            print("\nBM25 Search Results:")
-            print("-" * 30)
-            bm25_results = await self.bm25_search(query, size=3)
-            bm25_chunks = self._extract_chunks(bm25_results, "BM25")
+            # print("\nBM25 Search Results:")
+            # print("-" * 30)
+            # bm25_results = await self.bm25_search(query, size=3)
+            # bm25_chunks = self._extract_chunks(bm25_results, "BM25")
             
-            print("\nDense Vector Search Results:")
-            print("-" * 30)
-            dense_results = await self.vector_search(query, size=3)
-            dense_chunks = self._extract_chunks(dense_results, "Dense Vector")
+            # print("\nDense Vector Search Results:")
+            # print("-" * 30)
+            # dense_results = await self.vector_search(query, size=3)
+            # dense_chunks = self._extract_chunks(dense_results, "Dense Vector")
             
-            print("\nHybrid Search Results:")
-            print("-" * 30)
+            print("\nUsing Hybrid Search Results:")
+            # print("-" * 30)
             hybrid_results = await self.hybrid_search(query, size=3)
-            hybrid_chunks = self._extract_chunks(hybrid_results, "Hybrid")
+            # hybrid_chunks = self._extract_chunks(hybrid_results, "Hybrid")
             
            
             if hybrid_results:
@@ -256,9 +256,9 @@ class AgnoAgent:
             return {
                 "status": "success",
                 "query": query,
-                "bm25_chunks": bm25_chunks,
-                "dense_chunks": dense_chunks,
-                "hybrid_chunks": hybrid_chunks,
+                # "bm25_chunks": bm25_chunks,
+                # "dense_chunks": dense_chunks,
+                # "hybrid_chunks": hybrid_chunks,
                 "llm_response": llm_response
             }
             
@@ -281,22 +281,26 @@ class AgnoAgent:
                 # Handle different result formats
                 if '_source' in hit:
                     source = hit['_source']
-                    full_text = source['full_text']
+                    chunk_text = source.get('chunk_text', source.get('full_text', ''))
                     score = hit.get('_score', 0.0)
                 elif 'source' in hit:
                     source = hit['source']
-                    full_text = source['full_text']
+                    chunk_text = source.get('chunk_text', source.get('full_text', ''))
+                    score = hit.get('score', 0.0)
+                elif 'chunk_text' in hit:
+                    # Direct format with chunk_text
+                    chunk_text = hit['chunk_text']
                     score = hit.get('score', 0.0)
                 elif 'full_text' in hit:
-                    # Direct format
-                    full_text = hit['full_text']
+                    # Fallback to full_text if chunk_text not available
+                    chunk_text = hit['full_text']
                     score = hit.get('score', 0.0)
                 else:
                     print(f"Unexpected result format: {hit}")
                     continue
                 
-                chunks.append(full_text)  
-                display_text = full_text[:300] + "..." if len(full_text) > 300 else full_text
+                chunks.append(chunk_text)  
+                display_text = chunk_text[:300] + "..." if len(chunk_text) > 300 else chunk_text
                 print(f"  {i}. [{score:.2f}] {display_text}")  
                 
             except Exception as e:
@@ -373,10 +377,12 @@ class AgnoAgent:
             "Content-Type": "application/json"
         }
         data = {
-            "model": "local-llama",
+            # "model": "huggingface-llama",
+            "model": "gpt-4o-mini",
             "messages": [{"role": "user", "content": prompt}],
             "max_tokens": 200
         }
+        
         try:
             response = requests.post(
                 f"{LITELLM_PROXY_URL}/chat/completions", 
@@ -399,19 +405,36 @@ class AgnoAgent:
         if not await self.start_mcp_server():
             print("Failed to start MCP server")
             return
-        sample_queries = ["when was web audio api first introduced?"]
-        
         try:
-            for query in sample_queries:
+            while True:
+                print("\n" + "=" * 60)
+                print("🤖 Agno Agent - Ask a question about the indexed papers")
+                print("=" * 60)
+                try:
+                    query = input("\nEnter your question (or 'quit' to exit): ").strip()
+                except (EOFError, KeyboardInterrupt):
+                    print("\nGoodbye! 👋")
+                    break
+                
+                if query.lower() in ['quit', 'exit', 'q']:
+                    print("Goodbye! 👋")
+                    break
+                
+                if not query:
+                    print("Please enter a question.")
+                    continue
+                
+                print(f"\n🔍 Processing query: '{query}'")
+                print("-" * 60)
+                
                 result = await self.process_user_query(query)
                 
                 if result["status"] == "success":
-                    print("\nLLM Response:")
+                    print("\n🤖 LLM Response:")
                     print("-" * 40)
                     print(result["llm_response"])
-                    print("\n" + "=" * 60)
                 else:
-                    print(f"Error: {result['message']}")
+                    print(f"❌ Error: {result['message']}")
                 
                 await asyncio.sleep(1)
         
