@@ -22,7 +22,7 @@ on Windows: env11\Scripts\activate
 
 
 2. Create `.env` . We need OpenAI api key. 
-
+- (no need to change litellm key. it is what we set ourselves inside our system)
 ```bash
 
 OPENAI_API_KEY= actual_api_key
@@ -95,7 +95,7 @@ For each search type, it:
 ### LLM Configuration
 
 if you open litellm_config.yaml, HF model is taken in comments. 
-if you want to use HF, just remove comments and make Openai model and api key lines in comments
+if you want to use HF, just remove comments and make Openai model and api key lines in comments and change model name in agno_agent.py
 
 ```yaml
 model_list:
